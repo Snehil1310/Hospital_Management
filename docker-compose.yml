@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: hospital-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: hospital_erp
+    networks:
+      - hospital-net
+
+  backend:
+    build: ./backend
+    container_name: hospital-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/hospital_erp
+      - JWT_SECRET=hospital_erp_jwt_secret_key_2024
+      - JWT_REFRESH_SECRET=hospital_erp_refresh_secret_key_2024
+      - JWT_EXPIRE=24h
+      - JWT_REFRESH_EXPIRE=7d
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - mongodb
+    networks:
+      - hospital-net
+
+  frontend:
+    build: ./frontend
+    container_name: hospital-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - hospital-net
+
+volumes:
+  mongodb_data:
+
+
+networks:
+  hospital-net:
+    driver: bridge
