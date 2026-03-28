@@ -28,6 +28,12 @@ class ApiClient {
             const res = await fetch(url, { ...options, headers });
             const data = await res.json();
 
+            // For auth endpoints (login/register), return the response directly
+            // so the calling code can handle error messages properly
+            if (endpoint.startsWith('/auth/login') || endpoint.startsWith('/auth/register')) {
+                return data;
+            }
+
             if (res.status === 401) {
                 const refreshed = await this.refreshToken();
                 if (refreshed) {

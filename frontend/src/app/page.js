@@ -31,7 +31,11 @@ function LoginPage() {
                 setLoading(false);
             }
         } catch (err) {
-            setError('Connection error. Make sure the backend server is running on port 5000.');
+            if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+                setError('Unable to connect to server. Please make sure the backend is running.');
+            } else {
+                setError(err.message || 'An unexpected error occurred. Please try again.');
+            }
             setLoading(false);
         }
     };
