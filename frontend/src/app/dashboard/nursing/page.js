@@ -40,8 +40,14 @@ export default function NursingPage() {
         ]);
         if (s.status === 'fulfilled' && s.value.success) setShifts(s.value.data);
         if (l.status === 'fulfilled' && l.value.success) setLeaves(l.value.data);
-        if (n.status === 'fulfilled' && n.value.success) {
+        if (n.status === 'fulfilled' && n.value.success && n.value.data.length > 0) {
             setNurses(n.value.data.map(st => ({ _id: st.user?._id || st._id, name: st.user?.name || st.employeeId })));
+        } else {
+            // Fallback: fetch nurses directly from users if no HR staff records exist
+            const fallback = await api.get('/auth/users?role=nurse');
+            if (fallback.success && fallback.data?.length > 0) {
+                setNurses(fallback.data.map(u => ({ _id: u._id, name: u.name })));
+            }
         }
     };
 

@@ -133,4 +133,39 @@ router.get('/dashboard', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
 
+// Backfill: create Staff records for all existing users who don't have one
+router.post('/staff/backfill', authorize(ROLES.ADMIN), async (req, res) => {
+    try {
+        const roleDeptMap = {
+            admin: 'Administration', doctor: 'Medical', nurse: 'Nursing',
+            receptionist: 'Front Desk', lab_technician: 'Laboratory',
+            pharmacist: 'Pharmacy', maintenance_staff: 'Maintenance',
+            ambulance_driver: 'Emergency Services',
+        };
+        const roleDesignationMap = {
+            admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse',
+            receptionist: 'Receptionist', lab_technician: 'Lab Technician',
+            pharmacist: 'Pharmacist', maintenance_staff: 'Maintenance Staff',
+            ambulance_driver: 'Ambulance Driver',
+        };
+        const users = await User.find({ role: { $ne: 'patient' }, isActive: true });
+        let created = 0;
+        for (const user of users) {
+            const exists = await Staff.findOne({ user: user._id });
+            if (!exists) {
+                await Staff.create({
+                    user: user._id,
+                    employeeId: user.employeeId || `EMP-${Date.now().toString(36).toUpperCase()}`,
+                    department: user.department || roleDeptMap[user.role] || 'General',
+                    designation: user.specialization || roleDesignationMap[user.role] || user.role,
+                    joiningDate: user.createdAt || new Date(),
+                    salary: { basic: 30000, hra: 10000, allowances: 5000, deductions: 5000, net: 40000 },
+                });
+                created++;
+            }
+        }
+        res.json({ success: true, message: `${created} staff records created for ${users.length} users` });
+    } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+});
+
 module.exports = router;

@@ -41,6 +41,35 @@ router.post('/register', [
             }
         }
 
+        // Auto-create HR Staff record for non-patient roles
+        if (role !== 'patient') {
+            const { Staff } = require('../models/HR');
+            const roleDeptMap = {
+                admin: 'Administration', doctor: 'Medical', nurse: 'Nursing',
+                receptionist: 'Front Desk', lab_technician: 'Laboratory',
+                pharmacist: 'Pharmacy', maintenance_staff: 'Maintenance',
+                ambulance_driver: 'Emergency Services',
+            };
+            const roleDesignationMap = {
+                admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse',
+                receptionist: 'Receptionist', lab_technician: 'Lab Technician',
+                pharmacist: 'Pharmacist', maintenance_staff: 'Maintenance Staff',
+                ambulance_driver: 'Ambulance Driver',
+            };
+            try {
+                await Staff.create({
+                    user: user._id,
+                    employeeId: user.employeeId,
+                    department: department || roleDeptMap[role] || 'General',
+                    designation: specialization || roleDesignationMap[role] || role,
+                    joiningDate: new Date(),
+                    salary: { basic: 30000, hra: 10000, allowances: 5000, deductions: 5000, net: 40000 },
+                });
+            } catch (staffErr) {
+                console.error('Staff auto-create warning:', staffErr.message);
+            }
+        }
+
         const token = generateToken(user);
         const refreshToken = generateRefreshToken(user);
         user.refreshToken = refreshToken;

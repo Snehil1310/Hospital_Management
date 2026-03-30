@@ -53,10 +53,18 @@ export default function HRPage() {
         setTimeout(() => setMsg(''), 3000);
     };
 
+    const syncStaff = async () => {
+        const r = await api.post('/hr/staff/backfill', {});
+        if (r.success) { setMsg(r.message); loadData(); }
+        else setMsg(r.message || 'Sync failed');
+        setTimeout(() => setMsg(''), 4000);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">👥 HR Management</h1><p className="text-sm text-gray-500">Staff records, attendance & payroll</p></div>
+                <button onClick={syncStaff} className="btn-primary">🔄 Sync Staff Records</button>
             </div>
 
             {msg && <div className="p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-sm font-medium animate-fade-in">{msg}</div>}
