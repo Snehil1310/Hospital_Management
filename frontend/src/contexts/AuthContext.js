@@ -31,9 +31,9 @@ export function AuthProvider({ children }) {
     };
 
     const logout = async () => {
-        try { await api.post('/auth/logout'); } catch { }
         setUser(null);
         api.clearToken();
+        try { await api.post('/auth/logout'); } catch { }
     };
 
     const register = async (data) => {
